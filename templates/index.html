@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Selma AI</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f4f4f4;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        overflow: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: 600;
+      }
+
+      .chat-box {
+        flex-grow: 1;
+        background: white;
+        padding: 10px;
+        overflow-y: auto;
+      }
+
+      .message {
+        margin: 10px 0;
+        max-width: 55%;
+        padding: 12px;
+        border-radius: 20px;
+      }
+
+      .user {
+        margin-left: auto;
+        background: #e0e0e0;
+        text-align: right;
+        border-top-left-radius: 0;
+      }
+
+      .bot {
+        margin-right: auto;
+        background: linear-gradient(45deg, #5d10ec, #cf00b4, #d400ff, #a200ff);
+        color: white;
+        text-align: left;
+        border-bottom-right-radius: 0;
+      }
+
+      .bottom-input {
+        background-color: #ccc;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      #userInput {
+        flex-grow: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        outline: none;
+      }
+
+      button {
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        background: #a200ff;
+        color: white;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #7d00cc;
+      }
+
+      /* Orbital animation */
+      .circle-container {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+      }
+
+      .orbital {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+      }
+
+      .ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid;
+        transform: translate(-50%, -50%);
+        filter: drop-shadow(0 0 10px currentColor);
+        opacity: 0.7;
+        animation: rotate 10s linear infinite;
+      }
+
+      .ring::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.15;
+        filter: blur(10px);
+      }
+
+      .orbital:nth-child(1) {
+        animation: orbitX 6s infinite linear;
+      }
+
+      .orbital:nth-child(2) {
+        animation: orbitY 8s infinite linear reverse;
+      }
+
+      .orbital:nth-child(3) {
+        animation: orbitTilt 10s infinite linear;
+      }
+
+      .orbital:nth-child(4) {
+        animation: orbitZ 12s infinite linear reverse;
+      }
+
+      .orbital:nth-child(5) {
+        animation: orbitWave 14s infinite linear;
+      }
+
+      .orbital:nth-child(1) .ring {
+        color: #00ffff;
+      }
+
+      .orbital:nth-child(2) .ring {
+        color: #ff00ff;
+      }
+
+      .orbital:nth-child(3) .ring {
+        color: #00ff00;
+      }
+
+      .orbital:nth-child(4) .ring {
+        color: #ff8000;
+      }
+
+      .orbital:nth-child(5) .ring {
+        color: #ffffff;
+      }
+
+      .core {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: radial-gradient(circle, #00ffff, #004d4d);
+        box-shadow: 0 0 30px #00ffff, 0 0 60px #ff00ff, 0 0 90px #00ff00,
+          0 0 120px #ff8000;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        100% {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      @keyframes orbitX {
+        100% {
+          transform: rotateX(360deg);
+        }
+      }
+
+      @keyframes orbitY {
+        100% {
+          transform: rotateY(360deg);
+        }
+      }
+
+      @keyframes orbitTilt {
+        100% {
+          transform: rotateX(45deg) rotateY(360deg);
+        }
+      }
+
+      @keyframes orbitZ {
+        100% {
+          transform: rotateZ(360deg);
+        }
+      }
+
+      @keyframes orbitWave {
+        100% {
+          transform: rotateX(380deg) rotateY(380deg);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.15);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-box" id="chat">
+      <div class="message bot">
+        Hi, I’m Selma! What would you like to talk about?
+      </div>
+    </div>
+    <div class="bottom-input">
+      <div class="circle-container">
+        <div class="orbital"><div class="ring"></div></div>
+        <div class="orbital"><div class="ring"></div></div>
+        <div class="orbital"><div class="ring"></div></div>
+        <div class="orbital"><div class="ring"></div></div>
+        <div class="orbital"><div class="ring"></div></div>
+        <div class="core"></div>
+      </div>
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const message = input.value.trim();
+        if (!message) return;
+
+        const chat = document.getElementById("chat");
+        const userMessage = document.createElement("div");
+        userMessage.className = "message user";
+        userMessage.textContent = message;
+        chat.appendChild(userMessage);
+        input.value = "";
+        scrollToBottom();
+
+        try {
+          const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+
+          const botMessage = document.createElement("div");
+          botMessage.className = "message bot";
+          chat.appendChild(botMessage);
+
+          for (let i = 0; i < data.response.length; i++) {
+            botMessage.textContent += data.response.charAt(i);
+            scrollToBottom();
+            await new Promise((r) => setTimeout(r, 3));
+          }
+        } catch (err) {
+          console.error("Chat error:", err);
+        }
+      }
+
+      function scrollToBottom() {
+        const chat = document.getElementById("chat");
+        chat.scrollTop = chat.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
