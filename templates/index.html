@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Selma AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       body {
         margin: 0;
@@ -20,13 +21,15 @@
         background: white;
         padding: 10px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
       }
 
       .message {
         margin: 10px 0;
-        max-width: 55%;
+        max-width: 80%;
         padding: 12px;
         border-radius: 20px;
+        word-wrap: break-word;
       }
 
       .user {
@@ -58,15 +61,24 @@
         border: none;
         border-radius: 10px;
         outline: none;
+        min-height: 20px;
+        max-height: 100px;
+        resize: none;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: 1.4;
+        display:inline-block;
       }
 
       button {
-        padding: 10px;
+        padding: 10px 15px;
         border: none;
         border-radius: 10px;
         background: #a200ff;
         color: white;
         cursor: pointer;
+        font-size: 16px;
+        white-space: nowrap;
       }
 
       button:hover {
@@ -79,6 +91,7 @@
         width: 40px;
         height: 40px;
         margin-right: 10px;
+        flex-shrink: 0;
       }
 
       .orbital {
@@ -215,12 +228,87 @@
           transform: translate(-50%, -50%) scale(1.15);
         }
       }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .message {
+          max-width: 75%;
+          padding: 10px;
+          font-size: 15px;
+        }
+
+        .circle-container {
+          width: 30px;
+          height: 30px;
+        }
+
+        .ring {
+          width: 30px;
+          height: 30px;
+        }
+
+        .core {
+          width: 15px;
+          height: 15px;
+        }
+
+        button {
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .message {
+          max-width: 85%;
+          padding: 8px;
+          font-size: 14px;
+        }
+
+        .bottom-input {
+          padding: 8px;
+          gap: 8px;
+        }
+
+        #userInput {
+          padding: 8px;
+          font-size: 14px;
+        }
+
+        .circle-container {
+          width: 25px;
+          height: 25px;
+          margin-right: 8px;
+        }
+
+        .ring {
+          width: 25px;
+          height: 25px;
+        }
+
+        .core {
+          width: 12px;
+          height: 12px;
+        }
+
+        button {
+          padding: 6px 10px;
+          font-size: 13px;
+        }
+      }
+
+      /* Landscape orientation adjustments */
+      @media (max-height: 500px) and (orientation: landscape) {
+        .chat-box {
+          max-height: 60vh;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="chat-box" id="chat">
       <div class="message bot">
-        Hi, I’m Selma! What would you like to talk about?
+        Hi, I'm Selma! What would you like to talk about?
       </div>
     </div>
     <div class="bottom-input">
@@ -232,11 +320,23 @@
         <div class="orbital"><div class="ring"></div></div>
         <div class="core"></div>
       </div>
-      <input type="text" id="userInput" placeholder="Type your message..." />
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Type your message..."
+        rows="1" />
       <button onclick="sendMessage()">Send</button>
     </div>
 
     <script>
+      // Handle Enter key (shift+enter for new line)
+      textarea.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
       async function sendMessage() {
         const input = document.getElementById("userInput");
         const message = input.value.trim();
@@ -248,9 +348,18 @@
         userMessage.textContent = message;
         chat.appendChild(userMessage);
         input.value = "";
+        input.style.height = "auto"; // Reset textarea height
         scrollToBottom();
 
         try {
+          // Show typing indicator
+          const typingIndicator = document.createElement("div");
+          typingIndicator.className = "message bot";
+          typingIndicator.id = "typing";
+          typingIndicator.textContent = "Thinking...";
+          chat.appendChild(typingIndicator);
+          scrollToBottom();
+
           const response = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -259,10 +368,14 @@
 
           const data = await response.json();
 
+          // Remove typing indicator
+          chat.removeChild(typingIndicator);
+
           const botMessage = document.createElement("div");
           botMessage.className = "message bot";
           chat.appendChild(botMessage);
 
+          // Typewriter effect
           for (let i = 0; i < data.response.length; i++) {
             botMessage.textContent += data.response.charAt(i);
             scrollToBottom();
@@ -270,6 +383,17 @@
           }
         } catch (err) {
           console.error("Chat error:", err);
+          // Remove typing indicator if there's an error
+          const typing = document.getElementById("typing");
+          if (typing) chat.removeChild(typing);
+
+          // Show error message
+          const errorMessage = document.createElement("div");
+          errorMessage.className = "message bot";
+          errorMessage.textContent =
+            "Sorry, I'm having trouble connecting. Please try again later.";
+          chat.appendChild(errorMessage);
+          scrollToBottom();
         }
       }
 
