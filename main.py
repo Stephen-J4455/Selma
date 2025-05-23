@@ -9,11 +9,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 from supabase import create_client
 import wikipedia
 
-try:
-    nlp = spacy.load("en_core_web_md")
-except OSError:
-    print("Medium English model not found, falling back to small model...")
-    nlp = spacy.load("en_core_web_sm")
+def load_model():
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        from spacy.cli import download
+        download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
+
+nlp=load_model()
+
+
 
 # Supabase Setup
 url = "https://sffgznknlmqxtikkyhwu.supabase.co"
