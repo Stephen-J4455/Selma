@@ -4,16 +4,26 @@
     <title>Selma AI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      body {
+      html, body {
+        height: 100%;
         margin: 0;
+        padding: 0;
         background: linear-gradient(135deg, #e7e0fd 0%, #fbe9ff 100%);
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        overflow: hidden;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         font-weight: 600;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+
+      .selma-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        z-index: 10;
+        background: linear-gradient(135deg, #e7e0fd 0%, #fbe9ff 100%);
+        box-shadow: 0 2px 16px 0 rgba(160,0,255,0.03);
+        animation: fadeIn 1.2s;
       }
 
       .selma-centerpiece {
@@ -21,30 +31,29 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        margin-top: 36px;
-        margin-bottom: 16px;
-        animation: fadeIn 1.2s;
+        padding-top: 28px;
+        padding-bottom: 10px;
       }
 
       .selma-icon {
-        width: 78px;
-        height: 78px;
+        width: 58px;
+        height: 58px;
         border-radius: 50%;
         background: linear-gradient(135deg, #5607e2 0%, #cf00b4 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 6px 40px 0 rgba(130,0,255,0.12), 0 2px 8px 0 rgba(60,60,60,0.04);
-        margin-bottom: 13px;
+        margin-bottom: 12px;
         position: relative;
       }
       .selma-icon svg {
-        width: 42px;
-        height: 42px;
+        width: 32px;
+        height: 32px;
         display: block;
       }
       .selma-title {
-        font-size: 2.1rem;
+        font-size: 1.4rem;
         font-weight: bold;
         letter-spacing: 1px;
         background: linear-gradient(90deg, #a200ff 30%, #5d10ec 70%);
@@ -52,37 +61,56 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         text-fill-color: transparent;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
         text-align: center;
       }
       .selma-desc {
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #5607e2;
         font-weight: 500;
         opacity: 0.78;
         text-align: center;
       }
 
-      .chat-box {
-        background: white;
-        padding: 10px;
+      .chat-viewport {
+        position: fixed;
+        top: 110px; /* Height of header */
+        bottom:8%; /* Height of input bar */
+        left: 0;
+        right: 0;
         overflow-y: auto;
-        height: 90%;
-        border-radius: 18px 18px 0 0;
+        z-index: 2;
+        padding: 0 0;
+        background: none;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chat-box {
+        flex: 1 1 auto;
+        padding: 14px 0 10px 0;
         margin: 0 0 0 0;
+        background: white;
+        border-radius: 18px 18px 0 0;
         box-shadow: 0 0 24px 0 rgba(160,0,255,0.05);
-        -webkit-overflow-scrolling: touch;
         animation: fadeInUp 1s;
+        min-height: 100%;
+        width: 100%;
+        margin: 0 auto;
+        overflow-x: hidden;
+        border-top-left-radius: 20px;
+        
       }
 
       .message {
-        margin: 16px 0;
-        max-width: 82%;
+        margin: 16px 3vw;
+        max-width: 83vw;
         padding: 14px 18px 36px 18px;
         border-radius: 20px;
         word-wrap: break-word;
         position: relative;
-        font-size: 1.05rem;
+        font-size: 1.07rem;
         box-shadow: 0 2px 14px 0 rgba(130,0,255,0.05);
         transition: box-shadow 0.2s;
         background-clip: padding-box;
@@ -152,56 +180,6 @@
       .speak-btn.speaking svg {
         fill: #a200ff;
         stroke: #a200ff;
-      }
-
-      .bottom-input {
-        background: rgba(238,230,255,0.82);
-        padding: 10px 12px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-radius: 0 0 18px 18px;
-        box-shadow: 0 -2px 20px 0 rgba(160,0,255,0.04);
-      }
-
-      #userInput {
-        flex-grow: 1;
-        padding: 10px 13px;
-        border: none;
-        border-radius: 14px;
-        outline: none;
-        min-height: 22px;
-        max-height: 100px;
-        resize: none;
-        font-family: inherit;
-        font-size: 1rem;
-        line-height: 1.5;
-        display: inline-block;
-        background: #faf5ff;
-        box-shadow: 0 2px 10px 0 rgba(162,0,255,0.03);
-        color: #5100b1;
-      }
-
-      button {
-        padding: 10px 18px;
-        border: none;
-        border-radius: 12px;
-        background: linear-gradient(90deg, #a200ff 30%, #5d10ec 70%);
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 17px;
-        white-space: nowrap;
-        box-shadow: 0 2px 10px 0 rgba(130,0,255,0.08);
-        transition: background 0.16s;
-      }
-
-      button:hover {
-        background: linear-gradient(90deg, #cf00b4 30%, #7d00cc 70%);
       }
 
       /* Orbital animation */
@@ -294,74 +272,116 @@
         50% { transform: translate(-50%, -50%) scale(1.15);}
       }
 
-      @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.85);}
-        to   { opacity: 1; transform: scale(1);}
+      .bottom-input {
+        background: rgba(238,230,255,0.82);
+        padding: 10px 10px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 0 0 18px 18px;
+        box-shadow: 0 -2px 20px 0 rgba(160,0,255,0.04);
+        z-index: 10;
+        height: 8%;
       }
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(40px);}
-        to   { opacity: 1; transform: translateY(0);}
+
+      #userInput {
+        flex-grow: 1;
+        padding: 10px 10px;
+        border: none;
+        border-radius: 14px;
+        outline: none;
+        min-height: 22px;
+        max-height: 100px;
+        resize: none;
+        font-family: inherit;
+        font-size: 1rem;
+        line-height: 1.5;
+        display: inline-block;
+        background: #faf5ff;
+        box-shadow: 0 2px 10px 0 rgba(162,0,255,0.03);
+        color: #5100b1;
+      }
+
+      button {
+        padding: 10px 13px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #a200ff 30%, #5d10ec 70%);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 17px;
+        white-space: nowrap;
+        box-shadow: 0 2px 10px 0 rgba(130,0,255,0.08);
+        transition: background 0.16s;
+      }
+
+      button:hover {
+        background: linear-gradient(90deg, #cf00b4 30%, #7d00cc 70%);
       }
 
       /* Responsive adjustments */
       @media (max-width: 768px) {
-        .message {
-          max-width: 86%;
-          padding: 11px 11px 30px 13px;
-          font-size: 15px;
-        }
-        .selma-title { font-size: 1.3rem; }
-        .selma-icon { width: 58px; height: 58px;}
-        .selma-icon svg { width: 32px; height: 32px;}
+        .selma-header { top: 0; }
+        .chat-viewport { top: 95px; bottom: 60px; }
+        .selma-title { font-size: 1.13rem; }
+        .selma-icon { width: 42px; height: 42px;}
+        .selma-icon svg { width: 22px; height: 22px;}
+        .message { font-size: 15px; }
+        .bottom-input { padding: 6px 4px; font-size: 14px;}
         .circle-container { width: 30px; height: 30px;}
         .ring { width: 30px; height: 30px;}
         .core { width: 15px; height: 15px;}
-        button { padding: 8px 12px; font-size: 14px;}
       }
       @media (max-width: 480px) {
-        .selma-centerpiece { margin-top: 16px;}
-        .message { max-width: 95%; padding: 8px 6px 26px 8px; font-size: 14px;}
-        .bottom-input { padding: 8px; gap: 8px;}
-        #userInput { padding: 8px; font-size: 14px;}
-        .selma-title { font-size: 1.1rem;}
-        .selma-icon { width: 42px; height: 42px;}
-        .selma-icon svg { width: 22px; height: 22px;}
+        .selma-header { top: 0;}
+        .chat-viewport { top: 82px; bottom: 52px;}
+        .selma-title { font-size: 1rem;}
+        .selma-centerpiece { padding-top: 20px; padding-bottom: 6px;}
+        .selma-icon { width: 32px; height: 32px;}
+        .selma-icon svg { width: 15px; height: 15px;}
+        .bottom-input { padding: 5px 2px; font-size: 13px;}
+        .message { font-size: 14px; }
         .circle-container { width: 25px; height: 25px; margin-right: 8px;}
         .ring { width: 25px; height: 25px;}
         .core { width: 12px; height: 12px;}
-        button { padding: 6px 10px; font-size: 13px;}
-      }
-      @media (max-height: 500px) and (orientation: landscape) {
-        .chat-box { max-height: 60vh;}
       }
     </style>
   </head>
   <body>
-    <div class="selma-centerpiece">
-      <div class="selma-icon">
-        <!-- Selma AI stylish SVG icon -->
-        <svg viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="28" fill="#00FFF0" fill-opacity="0.17"/>
-          <circle cx="32" cy="32" r="20" fill="url(#a)" />
-          <ellipse cx="32" cy="24" rx="10" ry="10" fill="#fff" fill-opacity="0.68"/>
-          <ellipse cx="32" cy="38" rx="14" ry="10" fill="#a200ff" fill-opacity="0.18"/>
-          <ellipse cx="32" cy="38" rx="11.7" ry="7.8" fill="#fff" fill-opacity="0.10"/>
-          <ellipse cx="32" cy="38.5" rx="8.5" ry="5.5" fill="#a200ff" fill-opacity="0.09"/>
-          <circle cx="32" cy="32" r="4.5" fill="#5d10ec" />
-          <defs>
-            <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="matrix(0 20 -20 0 32 32)" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#a200ff"/>
-              <stop offset="0.6" stop-color="#cf00b4"/>
-              <stop offset="1" stop-color="#5d10ec"/>
-            </radialGradient>
-          </defs>
-        </svg>
+    <div class="selma-header">
+      <div class="selma-centerpiece">
+        <div class="selma-icon">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="28" fill="#00FFF0" fill-opacity="0.17"/>
+            <circle cx="32" cy="32" r="20" fill="url(#a)" />
+            <ellipse cx="32" cy="24" rx="10" ry="10" fill="#fff" fill-opacity="0.68"/>
+            <ellipse cx="32" cy="38" rx="14" ry="10" fill="#a200ff" fill-opacity="0.18"/>
+            <ellipse cx="32" cy="38" rx="11.7" ry="7.8" fill="#fff" fill-opacity="0.10"/>
+            <ellipse cx="32" cy="38.5" rx="8.5" ry="5.5" fill="#a200ff" fill-opacity="0.09"/>
+            <circle cx="32" cy="32" r="4.5" fill="#5d10ec" />
+            <defs>
+              <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="matrix(0 20 -20 0 32 32)" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#a200ff"/>
+                <stop offset="0.6" stop-color="#cf00b4"/>
+                <stop offset="1" stop-color="#5d10ec"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="selma-title">Selma AI</div>
+        <div class="selma-desc">Your creative, modern AI chat assistant</div>
       </div>
-      <div class="selma-title">Selma AI</div>
-      <div class="selma-desc">Your creative, modern AI chat assistant</div>
     </div>
-    <div class="chat-box" id="chat"></div>
-    <div class="bottom-input">
+    <div class="chat-viewport">
+      <div class="chat-box" id="chat"></div>
+    </div>
+    <form class="bottom-input" onsubmit="sendMessage(); return false;">
       <div class="circle-container">
         <div class="orbital"><div class="ring"></div></div>
         <div class="orbital"><div class="ring"></div></div>
@@ -375,8 +395,8 @@
         id="userInput"
         placeholder="Type your message..."
         rows="1" />
-      <button onclick="sendMessage()">Send</button>
-    </div>
+      <button type="submit">Send</button>
+    </form>
     <script>
       // First greeting with speak
       window.addEventListener("DOMContentLoaded", () => {
@@ -443,9 +463,6 @@
 
           scrollToBottom();
 
-          // Optional: Auto-read after response
-          // Uncomment the next line if you want auto speech after every response:
-          // speak(botMessage.querySelector('.response-text').textContent, botMessage.querySelector('.speak-btn'));
         } catch (err) {
           console.error("Chat error:", err);
           // Remove typing indicator if there's an error
