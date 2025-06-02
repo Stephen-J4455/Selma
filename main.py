@@ -11,11 +11,11 @@ import wikipedia
 
 def load_model():
     try:
-        return spacy.load("en_core_web_sm")
+        return spacy.load("en_core_web_lg")
     except OSError:
         from spacy.cli import download
-        download("en_core_web_sm")
-        return spacy.load("en_core_web_sm")
+        download("en_core_web_lg")
+        return spacy.load("en_core_web_lg")
 
 
 nlp=load_model()
