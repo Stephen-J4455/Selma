@@ -5,6 +5,3 @@ scikit-learn
 spacy
 wikipedia
 supabase
-datetime
-re
-requests
