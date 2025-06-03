@@ -182,22 +182,59 @@ class SelmaAI:
             response = requests.get(url, params=params, timeout=15)
             if response.status_code == 200:
                 data = response.json()
-                # Try all possible useful fields
+                results = []
+
+                # Main fields
                 for key in ["AbstractText", "Answer", "Definition", "Heading"]:
-                    if data.get(key):
-                        return data[key].strip()
-                # Try related topics
+                    value = data.get(key)
+                    if value and isinstance(value, str) and value.strip():
+                        result = value.strip()
+                        link = data.get("AbstractURL") or data.get("Redirect")
+                        image = data.get("Image")
+                        if link:
+                            result += f"\nLink: {link}"
+                        if image:
+                            result += f"\nImage: {image}"
+                        results.append(result)
+
+                # Related topics
                 if data.get("RelatedTopics"):
                     for topic in data["RelatedTopics"]:
                         if isinstance(topic, dict) and topic.get("Text"):
-                            return topic["Text"].strip()
+                            result = topic["Text"].strip()
+                            link = topic.get("FirstURL")
+                            icon = topic.get("Icon", {}).get("URL")
+                            if link:
+                                result += f"\nLink: {link}"
+                            if icon:
+                                result += f"\nImage: {icon}"
+                            results.append(result)
+                        # Sometimes RelatedTopics is a list of categories with subtopics
+                        elif isinstance(topic, dict) and topic.get("Topics"):
+                            for subtopic in topic["Topics"]:
+                                if subtopic.get("Text"):
+                                    result = subtopic["Text"].strip()
+                                    link = subtopic.get("FirstURL")
+                                    icon = subtopic.get("Icon", {}).get("URL")
+                                    if link:
+                                        result += f"\nLink: {link}"
+                                    if icon:
+                                        result += f"\nImage: {icon}"
+                                    results.append(result)
+
+                # Remove duplicates and empty results
+                results = [r for i, r in enumerate(results) if r and r not in results[:i]]
+
+                if results:
+                    return "\n\n".join(results[:5])  # Return up to 5 results, separated by paragraphs
+
                 return "No relevant answer found on the internet."
             else:
-                return f"DuckDuckGo API error: {response.status_code} {response.text}"
+                return f"Sorry, there was an error searching the internet (status code {response.status_code})."
         except requests.exceptions.Timeout:
             return "Internet search error: The request timed out. Please try again."
         except requests.exceptions.RequestException as eli:
-            return f"Internet search error: {eli}"
+            return f"Internet search error: {str(eli)}"
 
     def generate_response(self, user_input):
         normalized_input = user_input.lower().strip()
@@ -206,6 +243,19 @@ class SelmaAI:
         similar_response = self.find_similar_response(normalized_input)
         if similar_response:
             return similar_response, False
+
+        if any(kw in normalized_input for kw in
+                ["search", "lookup", "wikipedia", "who is", "what is", "tell me about", "is", "how to", "what about", "how do"]):
+            topic = self.extract_word_to_define(user_input)
+            if topic:
+                wiki_result = self.search_wikipedia(topic)
+                if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
+                    return wiki_result, False
+                # If Wikipedia fails, try internet search
+                internet_result = self.search_internet(topic)
+                if internet_result:
+                    return internet_result, False
+                return wiki_result, False
 
         # Greetings, etc.
         if self.is_greeting(normalized_input):
@@ -244,18 +294,7 @@ class SelmaAI:
             return self.solve_math(user_input), False
 
         # Wikipedia Search Trigger
-        if any(kw in normalized_input for kw in
-                ["search", "lookup", "wikipedia", "who is", "what is", "tell me about", "is", "how to", "what about", "how do"]):
-            topic = self.extract_word_to_define(user_input)
-            if topic:
-                wiki_result = self.search_wikipedia(topic)
-                if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
-                    return wiki_result, False
-                # If Wikipedia fails, try internet search
-                internet_result = self.search_internet(topic)
-                if internet_result:
-                    return internet_result, False
-                return wiki_result, False
+
 
         # Definition request
         if self.is_word_definition_request(normalized_input):
