@@ -189,12 +189,6 @@ class SelmaAI:
                     value = data.get(key)
                     if value and isinstance(value, str) and value.strip():
                         result = value.strip()
-                        link = data.get("AbstractURL") or data.get("Redirect")
-                        image = data.get("Image")
-                        if link:
-                            result += f"\nLink: {link}"
-                        if image:
-                            result += f"\nImage: {image}"
                         results.append(result)
 
                 # Related topics
@@ -202,24 +196,12 @@ class SelmaAI:
                     for topic in data["RelatedTopics"]:
                         if isinstance(topic, dict) and topic.get("Text"):
                             result = topic["Text"].strip()
-                            link = topic.get("FirstURL")
-                            icon = topic.get("Icon", {}).get("URL")
-                            if link:
-                                result += f"\nLink: {link}"
-                            if icon:
-                                result += f"\nImage: {icon}"
                             results.append(result)
                         # Sometimes RelatedTopics is a list of categories with subtopics
                         elif isinstance(topic, dict) and topic.get("Topics"):
                             for subtopic in topic["Topics"]:
                                 if subtopic.get("Text"):
                                     result = subtopic["Text"].strip()
-                                    link = subtopic.get("FirstURL")
-                                    icon = subtopic.get("Icon", {}).get("URL")
-                                    if link:
-                                        result += f"\nLink: {link}"
-                                    if icon:
-                                        result += f"\nImage: {icon}"
                                     results.append(result)
 
                 # Remove duplicates and empty results
