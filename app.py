@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from main import SelmaAI  # make sure this file has your class
+from main import SelmaAI
 
 app = Flask(__name__)
 selma = SelmaAI()

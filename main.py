@@ -8,6 +8,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from supabase import create_client
 import wikipedia
+import requests
+import webbrowser
 
 def load_model():
     try:
@@ -17,10 +19,8 @@ def load_model():
         download("en_core_web_md")
         return spacy.load("en_core_web_md")
 
+nlp = load_model()
 
-nlp=load_model()
-
-# Supabase Setup
 url = "https://sffgznknlmqxtikkyhwu.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmZmd6bmtubG1xeHRpa2t5aHd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE0NzEsImV4cCI6MjA2MjU0NzQ3MX0.vWmG3p7QcjQWsoS1v9mljyXahYKqFqH40Khyb7OT87U"
 supabase = None
@@ -42,18 +42,17 @@ class SelmaAI:
         self.agreement = ["yes", "ok", "alright", "got it", "yeah", "yh", "sure", "lets go"]
         self.disagreement = ["no", "nope", "maybe later", "later"]
         self.appreciation = ["thanks", "thank you", "nice", "appreciate"]
-        self.me=["selma","sel","selmy"]
+        self.me = ["selma", "sel", "selmy"]
         self.context = []
         self.conversation_history = []
         self.basic_patterns()
-        self.learning_word = None  # Word SELMA is waiting to learn
+        self.learning_word = None
         if supabase:
             self.initialize_dictionary_db()
 
     @staticmethod
     def initialize_dictionary_db():
         try:
-            # Check if table exists
             print("Connected to existing dictionary database")
         except Exception as eli:
             print(f"Initializing new dictionary database: {eli}")
@@ -71,7 +70,6 @@ class SelmaAI:
     def get_word_definition(word):
         if not supabase:
             return None
-
         try:
             result = supabase.table("english_dictionary").select("*").ilike("word", word).execute()
             if result.data:
@@ -85,7 +83,7 @@ class SelmaAI:
         if not supabase:
             return None
         try:
-            result=supabase.table("dict_memory").select("*").ilike("word", word).execute()
+            result = supabase.table("dict_memory").select("*").ilike("word", word).execute()
             return result.data[0]['definition']
         except Exception as eli:
             print(f"Error reading memory: {eli}")
@@ -96,7 +94,6 @@ class SelmaAI:
         if not supabase:
             print("Cannot save word - not connected to database")
             return False
-
         try:
             supabase.table("dict_memory").insert({
                 "word": word.lower(),
@@ -116,10 +113,8 @@ class SelmaAI:
             ("how are you", ["I'm functioning perfectly, thanks for asking!",
                              "All systems operational!",
                              "I'm just code, but running smoothly!"]),
-            ("who are you", ["I'm SELMA (Smart Electronic Learning Machine Assistant)"]),
-            ("what can you do", ["I can solve math problems, tell jokes, and chat with you!",
-                                 "Math calculations, jokes, and conversation are my specialties!",
-                                 "Try asking me to solve a math problem or tell you a joke!"]),
+            ("who are you", ["I'm SELMA (Self-Evolving and Learning Module Assistant)"]),
+            ("what can you do", ["I can solve simple math, tell jokes,do internet search,find meaning of words and chat with you!"]),
             ("what time is it", [self.get_current_time]),
             ("what is today's date", [self.get_date]),
             ("what day is today", [self.get_day]),
@@ -147,7 +142,6 @@ class SelmaAI:
                 if len(parts) == 2:
                     number = float(parts[0])
                     return f"{number}% of {parts[1]} is {number / 100 * float(parts[1])}"
-
             result = eval(clean_expr, {'__builtins__': None}, {
                 'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
                 'sqrt': math.sqrt, 'log': math.log, 'pi': math.pi, 'e': math.e
@@ -161,17 +155,13 @@ class SelmaAI:
         try:
             wikipedia.set_lang("en")
             summary = wikipedia.summary(query)
-
-            # Limit summary to 2000 characters, ending at last complete sentence
             if len(summary) > 2000:
-                # Try to find the last full stop before 2000th character
                 truncated = summary[:2000]
                 last_period = truncated.rfind(".")
                 if last_period != -1:
                     truncated = truncated[:last_period + 1]
                 return truncated.strip()
             return summary.strip()
-
         except wikipedia.exceptions.DisambiguationError as eli:
             return f"The topic '{query}' is ambiguous. Please be more specific: {', '.join(eli.options[:5])}..."
         except wikipedia.exceptions.PageError:
@@ -179,19 +169,45 @@ class SelmaAI:
         except Exception as eli:
             return f"An error occurred: {str(eli)}"
 
+    @staticmethod
+    def search_internet(query):
+        url = "https://api.duckduckgo.com/"
+        params = {
+            "q": query,
+            "format": "json",
+            "no_html": 1,
+            "skip_disambig": 1
+        }
+        try:
+            response = requests.get(url, params=params, timeout=15)
+            if response.status_code == 200:
+                data = response.json()
+                # Try all possible useful fields
+                for key in ["AbstractText", "Answer", "Definition", "Heading"]:
+                    if data.get(key):
+                        return data[key].strip()
+                # Try related topics
+                if data.get("RelatedTopics"):
+                    for topic in data["RelatedTopics"]:
+                        if isinstance(topic, dict) and topic.get("Text"):
+                            return topic["Text"].strip()
+                return "No relevant answer found on the internet."
+            else:
+                return f"DuckDuckGo API error: {response.status_code} {response.text}"
+        except requests.exceptions.Timeout:
+            return "Internet search error: The request timed out. Please try again."
+        except requests.exceptions.RequestException as eli:
+            return f"Internet search error: {eli}"
+
     def generate_response(self, user_input):
         normalized_input = user_input.lower().strip()
-        # Math
-        math_triggers = ["calculate", "solve", "+", "-", "*", "/", "^"]
-        if any(trigger in normalized_input for trigger in math_triggers):
-            return self.solve_math(normalized_input), False
 
         # Pattern match
         similar_response = self.find_similar_response(normalized_input)
         if similar_response:
             return similar_response, False
 
-        # Greetings, etc. [existing checks]
+        # Greetings, etc.
         if self.is_greeting(normalized_input):
             return random.choice([
                 "Hello there! How can I help?",
@@ -218,18 +234,28 @@ class SelmaAI:
                 self.learning_word = None
                 return response, False
             else:
-                 # Save the definition provided by the user
                 saved = self.save_word_definition(self.learning_word, user_input)
                 response = f"Thanks! I've learned that '{self.learning_word}' means: {user_input}" if saved else "Sorry, I couldn't save that definition."
                 self.learning_word = None
                 return response, False
 
+        # Math solving
+        if any(op in normalized_input for op in ['+', '-', '*', '/', '^', '%']):
+            return self.solve_math(user_input), False
+
         # Wikipedia Search Trigger
         if any(kw in normalized_input for kw in
-                ["search", "lookup", "wikipedia", "who is", "what is", "tell me about", "is", "how to","what about","how do"]):
-            topic = self.extract_word_to_define(user_input)  # Reuse existing method
+                ["search", "lookup", "wikipedia", "who is", "what is", "tell me about", "is", "how to", "what about", "how do"]):
+            topic = self.extract_word_to_define(user_input)
             if topic:
-                return self.search_wikipedia(topic), False
+                wiki_result = self.search_wikipedia(topic)
+                if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
+                    return wiki_result, False
+                # If Wikipedia fails, try internet search
+                internet_result = self.search_internet(topic)
+                if internet_result:
+                    return internet_result, False
+                return wiki_result, False
 
         # Definition request
         if self.is_word_definition_request(normalized_input):
@@ -243,9 +269,35 @@ class SelmaAI:
                     return f"I don't know '{word}'. Can you teach me what it means? (Or say 'I don't know' to skip)", False
             return "Which word would you like me to define?", False
 
-
         if any(word in normalized_input for word in ["bye", "goodbye", "see you"]):
             return "Goodbye! Come back anytime!", True
+
+        # Use spaCy to extract possible topic for search
+        doc = nlp(user_input)
+        topic = None
+        if doc.ents:
+            topic = doc.ents[0].text
+        elif doc.noun_chunks:
+            topic = list(doc.noun_chunks)[-1].text
+        else:
+            topic = user_input
+
+        # Try Wikipedia first for informational queries
+        question_words = ["who", "what", "when", "where", "why", "how", "tell me", "explain", "describe"]
+        if any(qw in normalized_input for qw in question_words) or len(user_input.split()) > 2:
+            wiki_result = self.search_wikipedia(topic)
+            if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
+                return wiki_result, False
+            # If Wikipedia fails, try internet search
+            internet_result = self.search_internet(topic)
+            if internet_result:
+                return internet_result, False
+            return wiki_result, False
+
+        # If nothing else matches, try a general internet search
+        internet_result = self.search_internet(user_input)
+        if internet_result:
+            return internet_result, False
 
         return "I'm not sure I understand. Can you rephrase what you mean?", False
 
@@ -258,7 +310,7 @@ class SelmaAI:
             similarities = cosine_similarity(tfidf_matrix[-1:], tfidf_matrix[:-1])
             max_sim_idx = np.argmax(similarities)
             max_similarity = similarities[0, max_sim_idx]
-            if max_similarity > 0.5:
+            if max_similarity > 0.6:
                 responses = self.known_responses[max_sim_idx]
                 if isinstance(responses, list):
                     chosen = random.choice(responses)
@@ -281,7 +333,7 @@ class SelmaAI:
     def is_appreciation(self, text):
         return any(appreciation in text.lower() for appreciation in self.appreciation)
 
-    def is_me(self,text):
+    def is_me(self, text):
         return any(me in text.lower() for me in self.me)
 
     @staticmethod
@@ -291,14 +343,11 @@ class SelmaAI:
 
     @staticmethod
     def extract_word_to_define(user_input):
-        # Remove common keywords and return cleaned phrase
         trigger_words = ["define", "what is", "who is", "meaning of", "tell me about", "search", "lookup", "wikipedia"]
         phrase = user_input.lower()
-
         for trigger in trigger_words:
             if trigger in phrase:
                 phrase = phrase.replace(trigger, "")
-
         return phrase.strip(" ?.")
 
     @staticmethod
@@ -314,7 +363,7 @@ class SelmaAI:
         return f"It's {datetime.now().strftime('%A')}"
 
     def chat(self):
-        print("SELMA: Hi! I'm your math and joke assistant. What would you like to do?")
+        print("SELMA: Hi! I'm your personal chat assistant. What would you like to do?")
         while True:
             try:
                 user_input = input("You: ").strip()
@@ -332,7 +381,6 @@ class SelmaAI:
                 break
             except Exception as eli:
                 print(f"SELMA: Oops! Error: {eli}")
-
 
 if __name__ == "__main__":
     bot = SelmaAI()
