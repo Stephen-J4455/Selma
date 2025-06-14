@@ -1,387 +1,51 @@
-import math
 import random
 import re
-from datetime import datetime
-import numpy as np
-import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from supabase import create_client
-import wikipedia
-import requests
-import webbrowser
-
-def load_model():
-    try:
-        return spacy.load("en_core_web_md")
-    except OSError:
-        from spacy.cli import download
-        download("en_core_web_md")
-        return spacy.load("en_core_web_md")
-
-nlp = load_model()
-
-url = "https://sffgznknlmqxtikkyhwu.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmZmd6bmtubG1xeHRpa2t5aHd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzE0NzEsImV4cCI6MjA2MjU0NzQ3MX0.vWmG3p7QcjQWsoS1v9mljyXahYKqFqH40Khyb7OT87U"
-supabase = None
-
-try:
-    supabase = create_client(url, key)
-    print("Connected to Database successfully!")
-except Exception as e:
-    print(f"Error connecting to Database: {e}")
-    print("Running in offline mode with limited functionality...")
+from huggingface_hub import InferenceClient
 
 class SelmaAI:
     def __init__(self):
-        self.vectorizer = TfidfVectorizer()
-        self.known_patterns = []
-        self.known_responses = []
-        self.greetings = ["hi", "hello", "hey", "yo", "sup",
-                          "good morning", "good afternoon", "good evening"]
-        self.agreement = ["yes", "ok", "alright", "got it", "yeah", "yh", "sure", "lets go"]
-        self.disagreement = ["no", "nope", "maybe later", "later"]
-        self.appreciation = ["thanks", "thank you", "nice", "appreciate"]
-        self.me = ["selma", "sel", "selmy"]
-        self.context = []
-        self.conversation_history = []
-        self.basic_patterns()
-        self.learning_word = None
-        if supabase:
-            self.initialize_dictionary_db()
-
-    @staticmethod
-    def initialize_dictionary_db():
-        try:
-            print("Connected to existing dictionary database")
-        except Exception as eli:
-            print(f"Initializing new dictionary database: {eli}")
-            try:
-                supabase.table("english_dictionary").insert([
-                    {"word": "hello", "definition": "used as a greeting", "part_of_speech": "interjection"},
-                    {"word": "time", "definition": "the indefinite continued progress of existence",
-                     "part_of_speech": "noun"},
-                ]).execute()
-                print("Initialized dictionary with sample words")
-            except Exception as eli:
-                print(f"Failed to initialize dictionary: {eli}")
-
-    @staticmethod
-    def get_word_definition(word):
-        if not supabase:
-            return None
-        try:
-            result = supabase.table("english_dictionary").select("*").ilike("word", word).execute()
-            if result.data:
-                return result.data[0]['definition']
-        except Exception as eli:
-            print(f"Error fetching definition: {eli}")
-        return None
-
-    @staticmethod
-    def get_from_memory_db(word):
-        if not supabase:
-            return None
-        try:
-            result = supabase.table("dict_memory").select("*").ilike("word", word).execute()
-            return result.data[0]['definition']
-        except Exception as eli:
-            print(f"Error reading memory: {eli}")
-        return None
-
-    @staticmethod
-    def save_word_definition(word, definition):
-        if not supabase:
-            print("Cannot save word - not connected to database")
-            return False
-        try:
-            supabase.table("dict_memory").insert({
-                "word": word.lower(),
-                "definition": definition,
-                "part_of_speech": "unknown"
-            }).execute()
-            return True
-        except Exception as eli:
-            print(f"Error saving word: {eli}")
-            return False
-
-    def basic_patterns(self):
-        patterns = [
-            ("what is your name", ["I am SELMA, your digital assistant!",
-                                   "You can call me SELMA!",
-                                   "I'm SELMA - here to help!"]),
-            ("how are you", ["I'm functioning perfectly, thanks for asking!",
-                             "All systems operational!",
-                             "I'm just code, but running smoothly!"]),
-            ("who are you", ["I'm SELMA (Self-Evolving and Learning Module Assistant)"]),
-            ("what can you do", ["I can solve simple math, tell jokes,do internet search,find meaning of words and chat with you!"]),
-            ("what time is it", [self.get_current_time]),
-            ("what is today's date", [self.get_date]),
-            ("what day is today", [self.get_day]),
-            ("tell me a joke", ["Why was the math book sad? It had too many problems!",
-                                "Why don't scientists trust atoms? Because they make up everything!",
-                                "Parallel lines have so much in common... it's a shame they'll never meet!"]),
-            ("make me laugh", ["Why can't you argue with a calculator? It always has the last word!",
-                               "Did you hear about the mathematician who's afraid of negative numbers? He'll stop at nothing to avoid them!",
-                               "Why was the equal sign so humble? It knew it wasn't less than or greater than anyone!"]),
-            ("funny", ["How do you stay warm in a cold room? Go to the corner - it's always 90 degrees!",
-                       "Why don't calculus majors throw house parties? They know it's bad to drive and derive!",
-                       "My love for you is like pi... real, irrational, and never ending!"])
-        ]
-        for pattern, response in patterns:
-            self.known_patterns.append(pattern)
-            self.known_responses.append(response)
-
-    @staticmethod
-    def solve_math(expression):
-        try:
-            clean_expr = re.sub(r'[^0-9+\-*/().^%]', '', expression)
-            clean_expr = clean_expr.replace('^', '**')
-            if '%' in clean_expr:
-                parts = clean_expr.split('%')
-                if len(parts) == 2:
-                    number = float(parts[0])
-                    return f"{number}% of {parts[1]} is {number / 100 * float(parts[1])}"
-            result = eval(clean_expr, {'__builtins__': None}, {
-                'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
-                'sqrt': math.sqrt, 'log': math.log, 'pi': math.pi, 'e': math.e
-            })
-            return f"The answer is {result}"
-        except Exception as eli:
-            return f"Sorry, I couldn't solve that: {str(eli)}"
-
-    @staticmethod
-    def search_wikipedia(query):
-        try:
-            wikipedia.set_lang("en")
-            summary = wikipedia.summary(query)
-            if len(summary) > 2000:
-                truncated = summary[:2000]
-                last_period = truncated.rfind(".")
-                if last_period != -1:
-                    truncated = truncated[:last_period + 1]
-                return truncated.strip()
-            return summary.strip()
-        except wikipedia.exceptions.DisambiguationError as eli:
-            return f"The topic '{query}' is ambiguous. Please be more specific: {', '.join(eli.options[:5])}..."
-        except wikipedia.exceptions.PageError:
-            return f"Sorry, I couldn't find anything about '{query}'."
-        except Exception as eli:
-            return f"An error occurred: {str(eli)}"
-
-    @staticmethod
-    def search_internet(query):
-        url = "https://api.duckduckgo.com/"
-        params = {
-            "q": query,
-            "format": "json",
-            "no_html": 1,
-            "skip_disambig": 1
-        }
-        try:
-            response = requests.get(url, params=params, timeout=15)
-            if response.status_code == 200:
-                data = response.json()
-                results = []
-
-                # Main fields
-                for key in ["AbstractText", "Answer", "Definition", "Heading"]:
-                    value = data.get(key)
-                    if value and isinstance(value, str) and value.strip():
-                        result = value.strip()
-                        results.append(result)
-
-                # Related topics
-                if data.get("RelatedTopics"):
-                    for topic in data["RelatedTopics"]:
-                        if isinstance(topic, dict) and topic.get("Text"):
-                            result = topic["Text"].strip()
-                            results.append(result)
-                        # Sometimes RelatedTopics is a list of categories with subtopics
-                        elif isinstance(topic, dict) and topic.get("Topics"):
-                            for subtopic in topic["Topics"]:
-                                if subtopic.get("Text"):
-                                    result = subtopic["Text"].strip()
-                                    results.append(result)
-
-                # Remove duplicates and empty results
-                results = [r for i, r in enumerate(results) if r and r not in results[:i]]
-
-                if results:
-                    return "\n\n".join(results[:5])  # Return up to 5 results, separated by paragraphs
-
-                return "No relevant answer found on the internet."
-            else:
-                return f"Sorry, there was an error searching the internet (status code {response.status_code})."
-        except requests.exceptions.Timeout:
-            return "Internet search error: The request timed out. Please try again."
-        except requests.exceptions.RequestException as eli:
-            return f"Internet search error: {str(eli)}"
-
-    def generate_response(self, user_input):
-        normalized_input = user_input.lower().strip()
-
-        # Pattern match
-        similar_response = self.find_similar_response(normalized_input)
-        if similar_response:
-            return similar_response, False
-
-        if any(kw in normalized_input for kw in
-                ["search", "lookup", "wikipedia", "who is", "what is", "tell me about", "is", "how to", "what about", "how do"]):
-            topic = self.extract_word_to_define(user_input)
-            if topic:
-                wiki_result = self.search_wikipedia(topic)
-                if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
-                    return wiki_result, False
-                # If Wikipedia fails, try internet search
-                internet_result = self.search_internet(topic)
-                if internet_result:
-                    return internet_result, False
-                return wiki_result, False
-
-        # Greetings, etc.
-        if self.is_greeting(normalized_input):
-            return random.choice([
+        # Basic patterns: greetings and hugging face mode
+        self.patterns = [
+            (re.compile(r"\b(hi|hello|hey|greetings|yo|sup)\b", re.I), [
                 "Hello there! How can I help?",
                 "Hi! What can I do for you today?",
                 "Greetings! Ready to Explore?"
-            ]), False
+            ]),
+            (re.compile(r"\b(hug|hugging face)\b", re.I), [
+                "Sending you a big virtual hug! 🤗",
+                "Here's a hug from SELMA! 🤗"
+            ]),
+            (re.compile(r"\b(bye|goodbye|see you)\b", re.I), [
+                "Goodbye! Come back anytime!",
+                "See you soon!"
+            ]),
+            (re.compile(r"\b(who are you|who are u)\b", re.I), [
+                "I am Selma, a SMART ENTITY for LEARNING,MANAGEMENT, and ASSISTANCE, a Ghanaian startup headquartered in The University of Professional Studies Accra."
+            ])
+        ]
+        # Hugging Face client
+        hf_token = "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"
+        self.hf_client = InferenceClient(token=hf_token) if hf_token else None
 
-        if self.is_me(normalized_input):
-            return random.choice(["Yeah...", "At your service "]), False
-
-        if self.is_agreement(normalized_input):
-            return random.choice(["Great!", "Understood!", "Let's do it!"]), False
-
-        if self.is_disagreement(normalized_input):
-            return random.choice(["No problem!", "Maybe later then!", "Alright!"]), False
-
-        if self.is_appreciation(normalized_input):
-            return random.choice(["You're welcome!", "Happy to help!", "Anytime!"]), False
-
-        # If SELMA is expecting a definition from the user
-        if self.learning_word:
-            if normalized_input in ["i don't know", "no", "not sure", "skip"]:
-                response = f"Okay, no problem. I'll try to learn '{self.learning_word}' another time."
-                self.learning_word = None
-                return response, False
-            else:
-                saved = self.save_word_definition(self.learning_word, user_input)
-                response = f"Thanks! I've learned that '{self.learning_word}' means: {user_input}" if saved else "Sorry, I couldn't save that definition."
-                self.learning_word = None
-                return response, False
-
-        # Math solving
-        if any(op in normalized_input for op in ['+', '-', '*', '/', '^', '%']):
-            return self.solve_math(user_input), False
-
-        # Wikipedia Search Trigger
-
-
-        # Definition request
-        if self.is_word_definition_request(normalized_input):
-            word = self.extract_word_to_define(normalized_input)
-            if word:
-                definition = self.get_word_definition(word) or self.get_from_memory_db(word)
-                if definition:
-                    return f"The word '{word}' means: {definition}", False
-                else:
-                    self.learning_word = word
-                    return f"I don't know '{word}'. Can you teach me what it means? (Or say 'I don't know' to skip)", False
-            return "Which word would you like me to define?", False
-
-        if any(word in normalized_input for word in ["bye", "goodbye", "see you"]):
-            return "Goodbye! Come back anytime!", True
-
-        # Use spaCy to extract possible topic for search
-        doc = nlp(user_input)
-        topic = None
-        if doc.ents:
-            topic = doc.ents[0].text
-        elif doc.noun_chunks:
-            topic = list(doc.noun_chunks)[-1].text
-        else:
-            topic = user_input
-
-        # Try Wikipedia first for informational queries
-        question_words = ["who", "what", "when", "where", "why", "how", "tell me", "explain", "describe"]
-        if any(qw in normalized_input for qw in question_words) or len(user_input.split()) > 2:
-            wiki_result = self.search_wikipedia(topic)
-            if "couldn't find" not in wiki_result.lower() and "ambiguous" not in wiki_result.lower():
-                return wiki_result, False
-            # If Wikipedia fails, try internet search
-            internet_result = self.search_internet(topic)
-            if internet_result:
-                return internet_result, False
-            return wiki_result, False
-
-        # If nothing else matches, try a general internet search
-        internet_result = self.search_internet(user_input)
-        if internet_result:
-            return internet_result, False
-
-        return "I'm not sure I understand. Can you rephrase what you mean?", False
-
-    def find_similar_response(self, input_text):
-        if not self.known_patterns:
-            return None
+    def ask_huggingface(self, prompt):
+        if not self.hf_client:
+            return "Hugging Face API is not configured."
         try:
-            all_patterns = self.known_patterns + [input_text.lower()]
-            tfidf_matrix = self.vectorizer.fit_transform(all_patterns)
-            similarities = cosine_similarity(tfidf_matrix[-1:], tfidf_matrix[:-1])
-            max_sim_idx = np.argmax(similarities)
-            max_similarity = similarities[0, max_sim_idx]
-            if max_similarity > 0.6:
-                responses = self.known_responses[max_sim_idx]
-                if isinstance(responses, list):
-                    chosen = random.choice(responses)
-                    if callable(chosen):
-                        return chosen()
-                    return chosen
-        except Exception as eli:
-            print(f"Similarity error: {eli}")
-        return None
+            response = self.hf_client.chat.completions.create(
+                model="mistralai/Magistral-Small-2506",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"Error with Hugging Face API: {e}"
 
-    def is_greeting(self, text):
-        return any(greeting in text.lower() for greeting in self.greetings)
-
-    def is_agreement(self, text):
-        return any(agreement in text.lower() for agreement in self.agreement)
-
-    def is_disagreement(self, text):
-        return any(disagreement in text.lower() for disagreement in self.disagreement)
-
-    def is_appreciation(self, text):
-        return any(appreciation in text.lower() for appreciation in self.appreciation)
-
-    def is_me(self, text):
-        return any(me in text.lower() for me in self.me)
-
-    @staticmethod
-    def is_word_definition_request(text):
-        triggers = ["what does", "meaning of", "define", "what is", "what's"]
-        return any(trigger in text.lower() for trigger in triggers)
-
-    @staticmethod
-    def extract_word_to_define(user_input):
-        trigger_words = ["define", "what is", "who is", "meaning of", "tell me about", "search", "lookup", "wikipedia"]
-        phrase = user_input.lower()
-        for trigger in trigger_words:
-            if trigger in phrase:
-                phrase = phrase.replace(trigger, "")
-        return phrase.strip(" ?.")
-
-    @staticmethod
-    def get_current_time():
-        return f"It's {datetime.now().strftime('%I:%M %p')}"
-
-    @staticmethod
-    def get_date():
-        return f"Today is {datetime.now().strftime('%B %d, %Y')}"
-
-    @staticmethod
-    def get_day():
-        return f"It's {datetime.now().strftime('%A')}"
+    def generate_response(self, user_input):
+        for pattern, responses in self.patterns:
+            if pattern.search(user_input):
+                return random.choice(responses), pattern.pattern.startswith(r"\b(bye")
+        # Fallback to Hugging Face model
+        hf_response = self.ask_huggingface(user_input)
+        return hf_response, False
 
     def chat(self):
         print("SELMA: Hi! I'm your personal chat assistant. What would you like to do?")
@@ -390,18 +54,15 @@ class SelmaAI:
                 user_input = input("You: ").strip()
                 if not user_input:
                     continue
-
                 response, should_exit = self.generate_response(user_input)
                 print(f"SELMA: {response}")
-
                 if should_exit:
                     break
-
             except KeyboardInterrupt:
                 print("\nSELMA: Goodbye!")
                 break
-            except Exception as eli:
-                print(f"SELMA: Oops! Error: {eli}")
+            except Exception as e:
+                print(f"SELMA: Oops! Error: {e}")
 
 if __name__ == "__main__":
     bot = SelmaAI()

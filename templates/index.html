@@ -32,8 +32,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding-top: 24px;
-        padding-bottom: 12px;
       }
 
       .selma-icon {
@@ -48,11 +46,14 @@
         margin-bottom: 10px;
         position: relative;
         border: 1.5px solid #e0e0f7;
+        overflow: hidden;
       }
-      .selma-icon svg {
-        width: 30px;
-        height: 30px;
+      .selma-icon img {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
         display: block;
+        object-fit: cover;
       }
       .selma-title {
         font-size: 1.5rem;
@@ -382,12 +383,15 @@
           font-size: 1.13rem;
         }
         .selma-icon {
-          width: 38px;
-          height: 38px;
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          overflow: hidden;
         }
-        .selma-icon svg {
-          width: 20px;
-          height: 20px;
+        .selma-icon img {
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
         }
         .message {
           font-size: 15px;
@@ -478,53 +482,10 @@
   <body>
     <div class="selma-header">
       <div class="selma-centerpiece">
-        <div class="selma-icon">
-          <svg viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="28" fill="#e0e0f7" fill-opacity="0.5" />
-            <circle cx="32" cy="32" r="20" fill="url(#a)" />
-            <ellipse
-              cx="32"
-              cy="24"
-              rx="10"
-              ry="10"
-              fill="#fff"
-              fill-opacity="0.68" />
-            <ellipse
-              cx="32"
-              cy="38"
-              rx="14"
-              ry="10"
-              fill="#a200ff"
-              fill-opacity="0.10" />
-            <ellipse
-              cx="32"
-              cy="38"
-              rx="11.7"
-              ry="7.8"
-              fill="#fff"
-              fill-opacity="0.10" />
-            <ellipse
-              cx="32"
-              cy="38.5"
-              rx="8.5"
-              ry="5.5"
-              fill="#a200ff"
-              fill-opacity="0.09" />
-            <circle cx="32" cy="32" r="4.5" fill="#5d10ec" />
-            <defs>
-              <radialGradient
-                id="a"
-                cx="0"
-                cy="0"
-                r="1"
-                gradientTransform="matrix(0 20 -20 0 32 32)"
-                gradientUnits="userSpaceOnUse">
-                <stop stop-color="#a200ff" />
-                <stop offset="0.6" stop-color="#cf00b4" />
-                <stop offset="1" stop-color="#5d10ec" />
-              </radialGradient>
-            </defs>
-          </svg>
+        <div class="selma-icon" font>
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/signup-bfcf8.appspot.com/o/userProfiles%2F20250613_234101_0000.png?alt=media&token=4a002f5a-18dd-4f7d-b51e-e5bdd751622c"
+            alt="S" />
         </div>
         <div class="selma-title">Selma AI</div>
         <div class="selma-desc">Your creative, modern AI chat assistant</div>
