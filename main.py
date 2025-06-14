@@ -6,21 +6,11 @@ class SelmaAI:
     def __init__(self):
         # Basic patterns: greetings and hugging face mode
         self.patterns = [
-            (re.compile(r"\b(hi|hello|hey|greetings|yo|sup)\b", re.I), [
-                "Hello there! How can I help?",
-                "Hi! What can I do for you today?",
-                "Greetings! Ready to Explore?"
+            (re.compile(r"\b(who are you|who are u)\b", re.I),[
+                "I an Selma, a SMART ENTITY for LEARNING, MANAGEMENT and ASSISTANCE, a Ghanaian startup headquartered in The University of Professional Studies Accra."
             ]),
-            (re.compile(r"\b(hug|hugging face)\b", re.I), [
-                "Sending you a big virtual hug! 🤗",
-                "Here's a hug from SELMA! 🤗"
-            ]),
-            (re.compile(r"\b(bye|goodbye|see you)\b", re.I), [
-                "Goodbye! Come back anytime!",
-                "See you soon!"
-            ]),
-            (re.compile(r"\b(who are you|who are u)\b", re.I), [
-                "I am Selma, a SMART ENTITY for LEARNING,MANAGEMENT, and ASSISTANCE, a Ghanaian startup headquartered in The University of Professional Studies Accra."
+            (re.compile(r"\b(who created you|who created u)\b", re.I),[
+                "I was developed by Stephen J. Amuzu, a Ghanaian software engineer and enterpreneur, as part of a project to create an AI assistant for learning and management."
             ])
         ]
         # Hugging Face client
