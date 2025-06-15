@@ -22,7 +22,7 @@ class SelmaAI:
             return "Hugging Face API is not configured."
         try:
             response = self.hf_client.chat.completions.create(
-                model="mistralai/Magistral-Small-2506",
+                model="meta-llama/Llama-3.1-8B-Instruct",
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content

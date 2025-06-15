@@ -8,6 +8,23 @@ marked.setOptions({
   },
 });
 
+// Typing effect for Markdown-rendered HTML
+async function typeMarkdown(element, markdown, delay = 18) {
+  element.innerHTML = ""; // Clear
+  let html = marked.parse(markdown);
+  let i = 0;
+  let temp = "";
+  // Reveal one character at a time (not perfect for HTML, but works for most Markdown)
+  while (i < html.length) {
+    temp += html[i];
+    element.innerHTML = temp;
+    i++;
+    await new Promise((res) => setTimeout(res, delay));
+  }
+  // After typing, highlight code blocks and add copy buttons
+  addCopyButtonsToCodeBlocks(element);
+}
+
 // First greeting with speak
 window.addEventListener("DOMContentLoaded", () => {
   const chat = document.getElementById("chat");
@@ -41,6 +58,10 @@ async function sendMessage() {
   input.style.height = "auto"; // Reset textarea height
   scrollToBottom();
 
+  // Animate bot icon
+  const botIcon = document.querySelector(".selma-icon");
+  if (botIcon) botIcon.classList.add("bot-animating");
+
   try {
     // Show typing indicator
     const typingIndicator = document.createElement("div");
@@ -65,15 +86,10 @@ async function sendMessage() {
     const botMessage = createBotMessage("");
     chat.appendChild(botMessage);
 
-    // Render Markdown to HTML
-    botMessage.querySelector(".response-text").innerHTML = marked.parse(
+    await typeMarkdown(
+      botMessage.querySelector(".response-text"),
       data.response
     );
-
-    // Highlight code blocks after rendering
-    botMessage.querySelectorAll("pre code").forEach((block) => {
-      hljs.highlightElement(block);
-    });
 
     scrollToBottom();
   } catch (err) {
@@ -88,6 +104,9 @@ async function sendMessage() {
     );
     chat.appendChild(botMessage);
     scrollToBottom();
+  } finally {
+    // Remove bot icon animation
+    if (botIcon) botIcon.classList.remove("bot-animating");
   }
 }
 
@@ -102,44 +121,7 @@ function createBotMessage(text) {
   botMessage.appendChild(responseText);
 
   // Highlight code blocks and add code-level copy button
-  responseText.querySelectorAll("pre code").forEach((block) => {
-    hljs.highlightElement(block);
-
-    // Ensure parent <pre> is positioned
-    const pre = block.parentElement;
-    pre.style.position = "relative";
-
-    // Only add if not already present (avoid duplicates)
-    if (!pre.querySelector(".code-copy-btn")) {
-      const codeCopyBtn = document.createElement("button");
-      codeCopyBtn.className = "code-copy-btn";
-      codeCopyBtn.title = "Copy code";
-      codeCopyBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
-          <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
-          <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
-        </svg>
-      `;
-      codeCopyBtn.onclick = () => {
-        navigator.clipboard.writeText(block.textContent).then(() => {
-          codeCopyBtn.innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-              <path d="M6 11.5l4 4 6-7" stroke="#a200ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          `;
-          setTimeout(() => {
-            codeCopyBtn.innerHTML = `
-              <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
-                <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
-                <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
-              </svg>
-            `;
-          }, 1200);
-        });
-      };
-      pre.appendChild(codeCopyBtn);
-    }
-  });
+  addCopyButtonsToCodeBlocks(responseText);
 
   // Message-level action buttons (copy/speak)
   const actionBtns = document.createElement("span");
@@ -201,6 +183,48 @@ function createBotMessage(text) {
 
   botMessage.appendChild(actionBtns);
   return botMessage;
+}
+
+// Helper to add copy buttons to all code blocks in a container
+function addCopyButtonsToCodeBlocks(container) {
+  container.querySelectorAll("pre code").forEach((block) => {
+    hljs.highlightElement(block);
+
+    // Ensure parent <pre> is positioned
+    const pre = block.parentElement;
+    pre.style.position = "relative";
+
+    // Only add if not already present (avoid duplicates)
+    if (!pre.querySelector(".code-copy-btn")) {
+      const codeCopyBtn = document.createElement("button");
+      codeCopyBtn.className = "code-copy-btn";
+      codeCopyBtn.title = "Copy code";
+      codeCopyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
+          <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
+          <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
+        </svg>
+      `;
+      codeCopyBtn.onclick = () => {
+        navigator.clipboard.writeText(block.textContent).then(() => {
+          codeCopyBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+              <path d="M6 11.5l4 4 6-7" stroke="#a200ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `;
+          setTimeout(() => {
+            codeCopyBtn.innerHTML = `
+              <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
+                <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
+                <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
+              </svg>
+            `;
+          }, 1200);
+        });
+      };
+      pre.appendChild(codeCopyBtn);
+    }
+  });
 }
 
 function speak(text, speakBtn) {

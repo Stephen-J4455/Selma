@@ -192,9 +192,9 @@ body {
 /* Code editor-like style for code blocks */
 .response-text pre code {
   display: block;
-  background: #23272e;
-  color: #e6e6e6;
   padding: 1em;
+  background-color: black;
+  color: white;
   border-radius: 8px;
   font-size: 1em;
   font-family: "Fira Mono", "Consolas", "Menlo", "Monaco", monospace;
@@ -265,16 +265,16 @@ body {
   animation: orbitWave 14s infinite linear;
 }
 .orbital:nth-child(1) .ring {
-  color: #5d10ec;
+  color: #3b02a3;
 }
 .orbital:nth-child(2) .ring {
-  color: #a200ff;
+  color: #490372;
 }
 .orbital:nth-child(3) .ring {
-  color: #cf00b4;
+  color: #80046f;
 }
 .orbital:nth-child(4) .ring {
-  color: #7d6fc7;
+  color: #3416ca;
 }
 .orbital:nth-child(5) .ring {
   color: #e0e0f7;
@@ -287,7 +287,7 @@ body {
   height: 20px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, #e0e0f7, #fff);
+  background: radial-gradient(circle, #c7077d, #420d86);
   box-shadow: 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -372,7 +372,7 @@ body {
   background: #fff;
 }
 button[type="submit"] {
-  padding: 12px 18px;
+  padding: 10px 14px;
   border: none;
   border-radius: 12px;
   background: linear-gradient(90deg, #a200ff 30%, #5d10ec 70%);
@@ -498,15 +498,49 @@ button[type="submit"]:hover {
   position: absolute;
   top: 8px;
   right: 8px;
-  z-index: 2;
   background: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 2px 5px;
+  border-radius: 4px;
+  padding: 2px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s;
+  opacity: 0.85;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px 0 rgba(60, 60, 60, 0.08);
 }
-.code-copy-btn:hover {
-  opacity: 1;
+
+.code-copy-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
+
+.code-copy-btn:hover svg {
+  stroke: #fff;
+}
+@keyframes botPulse {
+  0% {
+    box-shadow: 0 0 0 0 #a200ff44, 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 12px #a200ff22, 0 0 40px #e0e0f7, 0 0 80px #5d10ec;
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 #a200ff44, 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
+    transform: scale(1);
+  }
+}
+.selma-icon.bot-animating {
+  animation: botPulse 1.2s infinite;
+  border-color: #a200ff;
+  box-shadow: 0 0 0 0 #a200ff44, 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
+}
+
+/* ...existing code... */

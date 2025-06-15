@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Selma AI</title>
+    <title>Selma</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -9,7 +9,7 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}" />
@@ -17,12 +17,12 @@
   <body>
     <div class="selma-header">
       <div class="selma-centerpiece">
-        <div class="selma-icon" font>
+        <div class="selma-icon">
           <img
             src="https://firebasestorage.googleapis.com/v0/b/signup-bfcf8.appspot.com/o/userProfiles%2F20250613_234101_0000.png?alt=media&token=4a002f5a-18dd-4f7d-b51e-e5bdd751622c"
             alt="S" />
         </div>
-        <div class="selma-title">Selma AI</div>
+        <div class="selma-title">Selma</div>
         <div class="selma-desc">Your creative, modern AI chat assistant</div>
       </div>
     </div>
@@ -43,8 +43,20 @@
         id="userInput"
         placeholder="Type your message..."
         rows="1" />
-      <button type="submit">Send</button>
+      <button type="submit" class="send-btn" title="Send">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path
+            d="M3 11L19 3L11 19L10 13L3 11Z"
+            stroke="#fff"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </button>
     </form>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+      hljs.highlightAll();
+    </script>
   </body>
 </html>
