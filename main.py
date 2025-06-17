@@ -22,7 +22,7 @@ class SelmaAI:
             return "Hugging Face API is not configured."
         try:
             response = self.hf_client.chat.completions.create(
-                model="mistralai/Mistral-7B-Instruct-v0.2",
+                model="deepseek-ai/DeepSeek-R1",
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.choices[0].message.content
