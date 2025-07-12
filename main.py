@@ -10,7 +10,7 @@ class SelmaAI:
                 "I an Selma, a SMART ENTITY for LEARNING, MANAGEMENT and ASSISTANCE, a Ghanaian startup headquartered in The University of Professional Studies Accra."
             ]),
             (re.compile(r"\b(who created you|who created u)\b", re.I),[
-                "I was developed by Stephen J. Amuzu, a Ghanaian software engineer and enterpreneur, as part of a project to create an AI assistant for learning and management."
+                "I was developed by Stephen J. Amuzu, a Ghanaian software engineer and entrepreneur, as part of a project to create an AI assistant for learning and management."
             ])
         ]
         # Hugging Face client

@@ -9,7 +9,7 @@ marked.setOptions({
 });
 
 // Typing effect for Markdown-rendered HTML
-async function typeMarkdown(element, markdown, delay = 18) {
+async function typeMarkdown(element, markdown, delay = 3) {
   element.innerHTML = ""; // Clear
   let html = marked.parse(markdown);
   let i = 0;
@@ -44,8 +44,41 @@ textarea.addEventListener("keydown", function (e) {
   }
 });
 
+let isGenerating = false;
+let abortController = null;
+
 async function sendMessage() {
   const input = document.getElementById("userInput");
+  const sendBtn = document.querySelector(".send-btn");
+
+  // If already generating, stop generation and reset UI
+  if (isGenerating) {
+    isGenerating = false;
+    if (abortController) abortController.abort();
+    // Remove .generating and restore icon
+    if (sendBtn) {
+      sendBtn.classList.remove("generating");
+      sendBtn.innerHTML = `
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path
+            d="M3 11L19 3L11 19L10 13L3 11Z"
+            stroke="#fff"
+            stroke-width="1"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      `;
+    }
+    // Remove typing indicator if present
+    const chat = document.getElementById("chat");
+    const typing = document.getElementById("typing");
+    if (typing) chat.removeChild(typing);
+    // Remove bot icon animation
+    const botIcon = document.querySelector(".selma-icon");
+    if (botIcon) botIcon.classList.remove("bot-animating");
+    return;
+  }
+
   const message = input.value.trim();
   if (!message) return;
 
@@ -62,6 +95,20 @@ async function sendMessage() {
   const botIcon = document.querySelector(".selma-icon");
   if (botIcon) botIcon.classList.add("bot-animating");
 
+  // Add .generating to send button and change icon
+  if (sendBtn) {
+    sendBtn.classList.add("generating");
+    sendBtn.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="8" stroke="#fff" stroke-width="2" fill="none" opacity="0.7"/>
+        <path d="M11 5v3" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
+  isGenerating = true;
+  abortController = new AbortController();
+
   try {
     // Show typing indicator
     const typingIndicator = document.createElement("div");
@@ -75,6 +122,7 @@ async function sendMessage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
+      signal: abortController.signal,
     });
 
     const data = await response.json();
@@ -93,20 +141,40 @@ async function sendMessage() {
 
     scrollToBottom();
   } catch (err) {
-    console.error("Chat error:", err);
-    // Remove typing indicator if there's an error
-    const typing = document.getElementById("typing");
-    if (typing) chat.removeChild(typing);
+    if (err.name === "AbortError") {
+      // Generation was cancelled by user, do nothing
+    } else {
+      console.error("Chat error:", err);
+      // Remove typing indicator if there's an error
+      const typing = document.getElementById("typing");
+      if (typing) chat.removeChild(typing);
 
-    // Show error message
-    const botMessage = createBotMessage(
-      "Sorry, I'm having trouble connecting. Please try again later."
-    );
-    chat.appendChild(botMessage);
-    scrollToBottom();
+      // Show error message
+      const botMessage = createBotMessage(
+        "Sorry, I'm having trouble connecting. Please try again later."
+      );
+      chat.appendChild(botMessage);
+      scrollToBottom();
+    }
   } finally {
+    isGenerating = false;
+    abortController = null;
     // Remove bot icon animation
     if (botIcon) botIcon.classList.remove("bot-animating");
+    // Remove .generating from send button and restore icon
+    if (sendBtn) {
+      sendBtn.classList.remove("generating");
+      sendBtn.innerHTML = `
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path
+            d="M3 11L19 3L11 19L10 13L3 11Z"
+            stroke="#fff"
+            stroke-width="1"
+            stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      `;
+    }
   }
 }
 
@@ -250,3 +318,102 @@ function scrollToBottom() {
   const chat = document.getElementById("chat");
   chat.scrollTop = chat.scrollHeight;
 }
+
+// Overlay for mic/orb
+function showMicOverlay() {
+  // Prevent multiple overlays
+  if (document.getElementById("mic-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "mic-overlay";
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(30, 10, 60, 0.72)";
+  overlay.style.zIndex = 10000;
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.animation = "fadeIn 0.3s";
+
+  // Orb container
+  const orbContainer = document.createElement("div");
+  orbContainer.style.display = "flex";
+  orbContainer.style.flexDirection = "column";
+  orbContainer.style.alignItems = "center";
+  orbContainer.style.justifyContent = "center";
+
+  // Talking orb
+  const orb = document.createElement("div");
+  orb.className = "talking-orb";
+  orb.style.width = "110px";
+  orb.style.height = "110px";
+  orb.style.borderRadius = "50%";
+  orb.style.background = "linear-gradient(135deg, #cf00b4 30%, #7d00cc 70%)";
+  orb.style.boxShadow = "0 0 60px 0 #a200ff55, 0 0 0 0 #fff";
+  orb.style.display = "flex";
+  orb.style.alignItems = "center";
+  orb.style.justifyContent = "center";
+  orb.style.position = "relative";
+  orb.style.animation = "orbTalk 1.2s infinite";
+
+  // Mic icon in orb
+  orb.innerHTML = `
+    <svg width="48" height="48" viewBox="0 0 20 20" fill="none">
+      <path
+        d="M10 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3Zm5-3v1a5 5 0 0 1-10 0v-1m5 6v-2"
+        stroke="#fff"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+    </svg>
+  `;
+
+  // Optional: "Listening..." text
+  const listening = document.createElement("div");
+  listening.textContent = "Listening...";
+  listening.style.color = "#fff";
+  listening.style.fontSize = "1.2rem";
+  listening.style.fontWeight = "600";
+  listening.style.marginTop = "22px";
+  listening.style.letterSpacing = "0.04em";
+  listening.style.textShadow = "0 2px 12px #a200ff88";
+
+  orbContainer.appendChild(orb);
+  orbContainer.appendChild(listening);
+  overlay.appendChild(orbContainer);
+
+  // Close overlay on click outside orb or on Escape
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  document.addEventListener("keydown", function escListener(ev) {
+    if (ev.key === "Escape") {
+      if (document.getElementById("mic-overlay")) {
+        document.body.removeChild(overlay);
+        document.removeEventListener("keydown", escListener);
+      }
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+// Attach mic overlay to mic element
+window.addEventListener("DOMContentLoaded", () => {
+  // ...existing code...
+  // Attach mic overlay logic
+  const mic = document.querySelector(".mic");
+  if (mic) {
+    // mic.style.cursor = "pointer";
+    mic.onclick = showMicOverlay;
+  }
+});
+
+document.querySelector(".file").addEventListener("click", () => {
+  document.querySelector(".chat-box").innerHTML = "";
+});

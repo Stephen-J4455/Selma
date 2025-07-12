@@ -6,7 +6,7 @@ body {
   margin: 0;
   padding: 0;
   background: #f7f8fa;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: sans-serif;
   font-weight: 500;
   overflow: hidden;
   box-sizing: border-box;
@@ -48,31 +48,17 @@ body {
   display: block;
   object-fit: cover;
 }
-.selma-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #3a2172;
-  margin-bottom: 2px;
-  text-align: center;
-}
-.selma-desc {
-  font-size: 1.05rem;
-  color: #7d6fc7;
-  font-weight: 500;
-  opacity: 0.85;
-  text-align: center;
-}
+
 .chat-viewport {
   position: fixed;
-  top: 150px;
+  top: 100px;
   bottom: 80px;
   left: 0;
   right: 0;
   overflow-y: auto;
   z-index: 2;
   padding: 20px 0;
-  background: #f7f8fa;
+  background: #ffffff;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -81,11 +67,10 @@ body {
   flex: 1 1 auto;
   padding: 18px 0 10px 0;
   margin: 0;
-  background: #fff;
+  background: #ffffff;
   border-radius: 18px 18px 0 0;
   box-shadow: 0 0 24px 0 rgba(60, 60, 60, 0.04);
   animation: fadeInUp 1s;
-  min-height: 95%;
   width: 100%;
   margin: 0 auto;
   overflow-x: hidden;
@@ -125,8 +110,6 @@ body {
   display: inline-block;
   width: 32px;
   height: 32px;
-  background: url('data:image/svg+xml;utf8,<svg fill="none" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23e0e0f7"/><circle cx="16" cy="16" r="8" fill="%235d10ec" fill-opacity="0.12"/><circle cx="16" cy="16" r="3" fill="%235d10ec"/></svg>')
-    no-repeat center center;
   vertical-align: middle;
   margin-right: 10px;
   margin-bottom: -8px;
@@ -212,180 +195,88 @@ body {
   border-radius: 4px;
   font-size: 0.97em;
 }
-/* Orbital animation (unchanged) */
-.circle-container {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
-  flex-shrink: 0;
-}
-.orbital {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-}
-.ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid;
-  transform: translate(-50%, -50%);
-  filter: drop-shadow(0 0 10px currentColor);
-  opacity: 0.13;
-  animation: rotate 10s linear infinite;
-}
-.ring::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.09;
-  filter: blur(10px);
-}
-.orbital:nth-child(1) {
-  animation: orbitX 6s infinite linear;
-}
-.orbital:nth-child(2) {
-  animation: orbitY 8s infinite linear reverse;
-}
-.orbital:nth-child(3) {
-  animation: orbitTilt 10s infinite linear;
-}
-.orbital:nth-child(4) {
-  animation: orbitZ 12s infinite linear reverse;
-}
-.orbital:nth-child(5) {
-  animation: orbitWave 14s infinite linear;
-}
-.orbital:nth-child(1) .ring {
-  color: #3b02a3;
-}
-.orbital:nth-child(2) .ring {
-  color: #490372;
-}
-.orbital:nth-child(3) .ring {
-  color: #80046f;
-}
-.orbital:nth-child(4) .ring {
-  color: #3416ca;
-}
-.orbital:nth-child(5) .ring {
-  color: #e0e0f7;
-}
-.core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, #c7077d, #420d86);
-  box-shadow: 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes rotate {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-@keyframes orbitX {
-  100% {
-    transform: rotateX(360deg);
-  }
-}
-@keyframes orbitY {
-  100% {
-    transform: rotateY(360deg);
-  }
-}
-@keyframes orbitTilt {
-  100% {
-    transform: rotateX(45deg) rotateY(360deg);
-  }
-}
-@keyframes orbitZ {
-  100% {
-    transform: rotateZ(360deg);
-  }
-}
-@keyframes orbitWave {
-  100% {
-    transform: rotateX(380deg) rotateY(380deg);
-  }
-}
-@keyframes pulse {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.13);
-  }
-}
+
 .bottom-input {
   background: #fff;
-  padding: 12px 14px;
+  padding: 5px 20px;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
   gap: 7px;
   position: fixed;
-  bottom: 0;
+  bottom: 1px;
   left: 0;
   right: 0;
-  border-radius: 0 0 18px 18px;
+  border-radius: 30px;
   box-shadow: 0 -2px 16px 0 rgba(60, 60, 60, 0.06);
   z-index: 10;
-  height: 80px;
+  height: fit-content;
+  border: 1px solid rgb(177, 177, 177);
+  margin: 5px;
 }
 #userInput {
   flex-grow: 1;
   padding: 12px 14px;
-  border: 1.5px solid #e0e0f7;
+  border: none;
   border-radius: 14px;
   outline: none;
   min-height: 22px;
-  max-height: 100px;
+  max-height: 30px;
   resize: none;
   font-family: inherit;
-  font-size: 1.07rem;
+  font-size: small;
   line-height: 1.5;
   display: inline-block;
-  background: #f7f8fa;
   box-shadow: 0 2px 10px 0 rgba(162, 0, 255, 0.02);
   color: #3a2172;
   transition: border 0.18s;
 }
-#userInput:focus {
-  border: 1.5px solid #a200ff;
-  background: #fff;
-}
-button[type="submit"] {
-  padding: 10px 14px;
+
+.send-btn[type="submit"],
+.mic,
+.file {
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #a200ff 30%, #5d10ec 70%);
-  color: white;
+  border-radius: 50%;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgb(0, 0, 0);
+  background-color: #c1c1c2;
   font-weight: 600;
-  cursor: pointer;
   font-size: 17px;
   white-space: nowrap;
   box-shadow: 0 2px 10px 0 rgba(130, 0, 255, 0.08);
   transition: background 0.16s;
 }
-button[type="submit"]:hover {
+
+.mic:hover,
+.file:hover {
   background: linear-gradient(90deg, #cf00b4 30%, #7d00cc 70%);
+}
+.generating {
+  background: linear-gradient(90deg, #cf00b4 30%, #7d00cc 70%);
+}
+
+.img-gen-btn {
+  border: none;
+  border-radius: 30px;
+  font-size: small;
+  padding: 0 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgb(255, 255, 255);
+  background: linear-gradient(90deg, #cf00b4 30%, #7d00cc 70%);
+  white-space: nowrap;
+  box-shadow: 0 2px 10px 0 rgba(130, 0, 255, 0.08);
+  transition: background 0.16s;
+}
+
+.queries {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
 }
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -393,8 +284,8 @@ button[type="submit"]:hover {
     top: 0;
   }
   .chat-viewport {
-    top: 85px;
-    bottom: 70px;
+    top: 50px;
+    bottom: 100px;
   }
   .selma-title {
     font-size: 1.13rem;
@@ -416,19 +307,7 @@ button[type="submit"]:hover {
   .bottom-input {
     padding: 8px 4px;
     font-size: 14px;
-    height: 60px;
-  }
-  .circle-container {
-    width: 28px;
-    height: 28px;
-  }
-  .ring {
-    width: 28px;
-    height: 28px;
-  }
-  .core {
-    width: 13px;
-    height: 13px;
+    height: fit-content;
   }
 }
 @media (max-width: 480px) {
@@ -436,8 +315,8 @@ button[type="submit"]:hover {
     top: 0;
   }
   .chat-viewport {
-    top: 70px;
-    bottom: 54px;
+    top: 10px;
+    bottom: 90px;
   }
   .selma-title {
     font-size: 1rem;
@@ -455,25 +334,13 @@ button[type="submit"]:hover {
     height: 12px;
   }
   .bottom-input {
-    padding: 5px 2px;
+    padding: 5px 10px;
     font-size: 13px;
-    height: 48px;
+    height: fit-content;
+    bottom: 0;
   }
   .message {
     font-size: 13px;
-  }
-  .circle-container {
-    width: 20px;
-    height: 20px;
-    margin-right: 6px;
-  }
-  .ring {
-    width: 20px;
-    height: 20px;
-  }
-  .core {
-    width: 8px;
-    height: 8px;
   }
 }
 @keyframes fadeInUp {
@@ -542,5 +409,22 @@ button[type="submit"]:hover {
   border-color: #a200ff;
   box-shadow: 0 0 0 0 #a200ff44, 0 0 30px #e0e0f7, 0 0 60px #5d10ec;
 }
+@keyframes orbTalk {
+  0% {
+    box-shadow: 0 0 60px 0 #a200ff55, 0 0 0 0 #fff;
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 80px 12px #cf00b444, 0 0 0 0 #fff;
+    transform: scale(1.08);
+  }
+  60% {
+    box-shadow: 0 0 60px 0 #a200ff55, 0 0 0 0 #fff;
+    transform: scale(0.97);
+  }
+  100% {
+    box-shadow: 0 0 60px 0 #a200ff55, 0 0 0 0 #fff;
+    transform: scale(1);
+  }
+}
 
-/* ...existing code... */

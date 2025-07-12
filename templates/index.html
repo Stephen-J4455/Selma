@@ -13,6 +13,7 @@
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="selma-header">
@@ -22,38 +23,53 @@
             src="https://firebasestorage.googleapis.com/v0/b/signup-bfcf8.appspot.com/o/userProfiles%2F20250613_234101_0000.png?alt=media&token=4a002f5a-18dd-4f7d-b51e-e5bdd751622c"
             alt="S" />
         </div>
-        <div class="selma-title">Selma</div>
-        <div class="selma-desc">Your creative, modern AI chat assistant</div>
       </div>
     </div>
     <div class="chat-viewport">
       <div class="chat-box" id="chat"></div>
     </div>
     <form class="bottom-input" onsubmit="sendMessage(); return false;">
-      <div class="circle-container">
-        <div class="orbital"><div class="ring"></div></div>
-        <div class="orbital"><div class="ring"></div></div>
-        <div class="orbital"><div class="ring"></div></div>
-        <div class="orbital"><div class="ring"></div></div>
-        <div class="orbital"><div class="ring"></div></div>
-        <div class="core"></div>
-      </div>
-      <input
+      <textarea
         type="text"
         id="userInput"
-        placeholder="Type your message..."
-        rows="1" />
-      <button type="submit" class="send-btn" title="Send">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path
-            d="M3 11L19 3L11 19L10 13L3 11Z"
-            stroke="#fff"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round" />
-        </svg>
-      </button>
+        placeholder="Ask Selma"
+        rows="1"></textarea>
+      <div class="queries">
+        <div class="file">
+          <!-- Plus SVG icon -->
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 4V16M4 10H16"
+              stroke="#fff"
+              stroke-width="2"
+              stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="img-gen-btn">Deepthink J2.0.1</div>
+        <div class="mic">
+          <!-- Mic SVG icon -->
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3Zm5-3v1a5 5 0 0 1-10 0v-1m5 6v-2"
+              stroke="#fff"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <button type="submit" class="send-btn" title="Send">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path
+              d="M3 11L19 3L11 19L10 13L3 11Z"
+              stroke="#fff"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
     </form>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="script.js"></script>
   </body>
 </html>
