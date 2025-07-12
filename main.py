@@ -14,7 +14,7 @@ class SelmaAI:
             ])
         ]
         # Hugging Face client
-        hf_token = "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"
+        hf_token = "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"
         self.hf_client = InferenceClient(token=hf_token) if hf_token else None
 
     def ask_huggingface(self, prompt):
