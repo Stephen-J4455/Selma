@@ -1,6 +1,5 @@
 import random
 import re
-import os
 from huggingface_hub import InferenceClient
 
 class SelmaAI:
@@ -15,7 +14,7 @@ class SelmaAI:
             ])
         ]
         # Hugging Face client
-        hf_token = os.getenv("HF_TOKEN")
+        hf_token = "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"
         self.hf_client = InferenceClient(token=hf_token) if hf_token else None
 
     def ask_huggingface(self, prompt):
