@@ -25,7 +25,7 @@ class SelmaAI:
             response = self.hf_client.chat.completions.create(
                 model="deepseek-ai/DeepSeek-R1-0528",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=4096 # User requested very high output length
+                max_tokens=1024 # Lowered to reduce memory usage
             )
             content = response.choices[0].message.content
             print(f"[DEBUG] Hugging Face response length: {len(content) if content else 0}")
@@ -57,7 +57,7 @@ class SelmaAI:
                 response = self.hf_client.chat.completions.create(
                     model="Qwen/Qwen3-235B-A22B-Thinking-2507",
                     messages=messages,
-                    max_tokens=4096
+                    max_tokens=1024 # Lowered to reduce memory usage
                 )
                 content = response.choices[0].message.content
                 print(f"[DEBUG] Quen2Coder response length (part {i+1}): {len(content) if content else 0}")
