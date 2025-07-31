@@ -9,7 +9,7 @@ marked.setOptions({
 });
 
 // Typing effect for Markdown-rendered HTML
-async function typeMarkdown(element, markdown, delay = 3) {
+async function typeMarkdown(element, markdown, delay = 0.2) {
   element.innerHTML = ""; // Clear
   let html = marked.parse(markdown);
   let i = 0;
@@ -134,9 +134,15 @@ async function sendMessage() {
     const botMessage = createBotMessage("");
     chat.appendChild(botMessage);
 
+    // Remove <think>...</think> tags and their content from the response
+    const cleanResponse = data.response.replace(
+      /<think>[\s\S]*?<\/think>/gi,
+      ""
+    );
+
     await typeMarkdown(
       botMessage.querySelector(".response-text"),
-      data.response
+      cleanResponse
     );
 
     scrollToBottom();
@@ -403,17 +409,170 @@ function showMicOverlay() {
   document.body.appendChild(overlay);
 }
 
-// Attach mic overlay to mic element
+// Attach mic overlay logic only
 window.addEventListener("DOMContentLoaded", () => {
-  // ...existing code...
-  // Attach mic overlay logic
   const mic = document.querySelector(".mic");
   if (mic) {
-    // mic.style.cursor = "pointer";
     mic.onclick = showMicOverlay;
   }
 });
 
 document.querySelector(".file").addEventListener("click", () => {
   document.querySelector(".chat-box").innerHTML = "";
+});
+
+// Code editor button logic
+// Code editor button logic
+window.addEventListener("DOMContentLoaded", () => {
+  const codeEditorPage = document.getElementById("codeEditorPage");
+  const codeEditorBtn = document.querySelector(".code-editor-btn");
+  if (codeEditorBtn && codeEditorPage) {
+    codeEditorBtn.addEventListener("click", () => {
+      codeEditorPage.style.display = "block";
+      document.body.style.overflow = "hidden";
+    });
+    // Close and back buttons
+    document.getElementById("closeCodeEditor").onclick = hideCodeEditor;
+    document.getElementById("backToChatBtn").onclick = hideCodeEditor;
+    function hideCodeEditor() {
+      codeEditorPage.style.display = "none";
+      document.body.style.overflow = "auto";
+    }
+    // Generate code logic
+    document.getElementById("editorGenerateBtn").onclick = async function () {
+      const input = document.getElementById("editorInput").value.trim();
+      const output = document.getElementById("markdownOutput");
+      if (!input) {
+        output.innerHTML = "<em>Please enter a prompt to generate code.</em>";
+        return;
+      }
+      output.innerHTML = "<em>Generating code...</em>";
+      try {
+        const response = await fetch("/codegen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: input }),
+        });
+        const data = await response.json();
+        // Remove <think>...</think> tags and their content from the response
+        let cleanResponse = (data.response || "No response.").replace(
+          /<think>[\s\S]*?<\/think>/gi,
+          ""
+        );
+        // Only display code blocks with typing animation
+        const codeBlocks = [];
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = marked.parse(cleanResponse);
+        tempDiv.querySelectorAll("pre code").forEach((block) => {
+          // Use innerText to get all code, including newlines, and trim trailing newlines
+          codeBlocks.push(block.innerText.replace(/\s+$/, ""));
+        });
+        if (codeBlocks.length === 0) {
+          output.innerHTML = "<em>No code block found in response.</em>";
+          return;
+        }
+        output.innerHTML = "";
+        // Add code-level copy and run buttons for the first code block
+        for (let i = 0; i < codeBlocks.length; i++) {
+          const code = codeBlocks[i];
+          const pre = document.createElement("pre");
+          pre.style.position = "relative";
+          const codeElem = document.createElement("code");
+          codeElem.className = "hljs";
+          pre.appendChild(codeElem);
+          output.appendChild(pre);
+          await typeCodeBlockFull(codeElem, code);
+          hljs.highlightElement(codeElem);
+          // Add copy button
+          if (!pre.querySelector(".code-copy-btn")) {
+            const codeCopyBtn = document.createElement("button");
+            codeCopyBtn.className = "code-copy-btn";
+            codeCopyBtn.title = "Copy code";
+            codeCopyBtn.innerHTML = `
+              <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
+                <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
+                <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
+              </svg>
+            `;
+            codeCopyBtn.onclick = () => {
+              navigator.clipboard.writeText(code).then(() => {
+                codeCopyBtn.innerHTML = `
+                  <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                    <path d="M6 11.5l4 4 6-7" stroke="#a200ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                `;
+                setTimeout(() => {
+                  codeCopyBtn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 21 21" fill="none">
+                      <rect x="6.2" y="6.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.45"/>
+                      <rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2" stroke="#5d10ec" stroke-width="1.2" opacity="0.6"/>
+                    </svg>
+                  `;
+                }, 1200);
+              });
+            };
+            pre.appendChild(codeCopyBtn);
+          }
+          // Add run button (only for the first code block)
+          if (i === 0 && !pre.querySelector(".code-run-btn")) {
+            const codeRunBtn = document.createElement("button");
+            codeRunBtn.className = "code-run-btn";
+            codeRunBtn.title = "Run code in new page";
+            codeRunBtn.style.position = "absolute";
+            codeRunBtn.style.top = "8px";
+            codeRunBtn.style.right = "44px";
+            codeRunBtn.style.background = "#fff";
+            codeRunBtn.style.border = "none";
+            codeRunBtn.style.borderRadius = "4px";
+            codeRunBtn.style.padding = "2px";
+            codeRunBtn.style.width = "28px";
+            codeRunBtn.style.height = "28px";
+            codeRunBtn.style.display = "flex";
+            codeRunBtn.style.alignItems = "center";
+            codeRunBtn.style.justifyContent = "center";
+            codeRunBtn.style.cursor = "pointer";
+            codeRunBtn.style.opacity = "0.85";
+            codeRunBtn.style.zIndex = "2";
+            codeRunBtn.innerHTML = `
+              <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="#5d10ec" stroke-width="2" fill="none" opacity="0.7"/>
+                <path d="M9 8l5 3-5 3V8z" fill="#a200ff"/>
+              </svg>
+            `;
+            codeRunBtn.onclick = () => {
+              // Open a new window and run the code as HTML/JS
+              const win = window.open();
+              if (win) {
+                // If code looks like HTML, run as HTML, else as JS in a basic HTML shell
+                let isHTML =
+                  /<html[\s\S]*<\/html>/i.test(code) ||
+                  /<body[\s\S]*<\/body>/i.test(code) ||
+                  /<script[\s\S]*<\/script>/i.test(code);
+                if (isHTML) {
+                  win.document.write(code);
+                } else {
+                  win.document.write(
+                    `<!DOCTYPE html><html><head><title>Run Code</title></head><body><pre id='output'></pre><script>try{\n${code}\n}catch(e){document.getElementById('output').textContent='Error: '+e;}</script></body></html>`
+                  );
+                }
+                win.document.close();
+              }
+            };
+            pre.appendChild(codeRunBtn);
+          }
+        }
+      } catch (e) {
+        output.innerHTML = "<em>Error generating code.</em>";
+      }
+    };
+    // Typing animation for code blocks (no truncation, handles long code)
+    async function typeCodeBlockFull(element, code, delay = 8) {
+      element.textContent = "";
+      for (let i = 0; i < code.length; i++) {
+        element.textContent += code[i];
+        // Use a slightly longer delay for very long code to avoid browser freezing
+        if (i % 100 === 0) await new Promise((res) => setTimeout(res, delay));
+      }
+    }
+  }
 });

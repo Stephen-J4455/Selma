@@ -1,5 +1,4 @@
-/* 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 */
-/* mistralai/Magistral-Small-2506 */
+
 html,
 body {
   height: 100%;
@@ -273,6 +272,12 @@ body {
   transition: background 0.16s;
 }
 
+.img-gen-btn option {
+  background-color: #3a2172;
+  border-radius: 30px;
+  margin: 10px 20px;
+}
+
 .queries {
   display: flex;
   flex-direction: row;
@@ -341,6 +346,17 @@ body {
   }
   .message {
     font-size: 13px;
+  }
+  .custom-select {
+    min-width: 110px;
+    font-size: 13px;
+  }
+  .custom-select .selected-option {
+    padding: 6px 10px;
+    min-height: 26px;
+  }
+  .custom-select .options-list li {
+    padding: 7px 10px;
   }
 }
 @keyframes fadeInUp {
@@ -427,4 +443,3 @@ body {
     transform: scale(1);
   }
 }
-
