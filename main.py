@@ -15,7 +15,7 @@ class SelmaAI:
             ])
         ]
         # Hugging Face client
-        hf_token = os.getenv["HF_TOKENS"]
+        hf_token = os.environ.get("HF_TOKEN")
         self.hf_client = InferenceClient(token=hf_token) if hf_token else None
 
     def ask_huggingface(self, prompt):
