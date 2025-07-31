@@ -433,7 +433,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     // Close and back buttons
     document.getElementById("closeCodeEditor").onclick = hideCodeEditor;
-    document.getElementById("backToChatBtn").onclick = hideCodeEditor;
     function hideCodeEditor() {
       codeEditorPage.style.display = "none";
       document.body.style.overflow = "auto";
@@ -442,11 +441,16 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("editorGenerateBtn").onclick = async function () {
       const input = document.getElementById("editorInput").value.trim();
       const output = document.getElementById("markdownOutput");
+      const generateBtn = document.getElementById("editorGenerateBtn");
       if (!input) {
         output.innerHTML = "<em>Please enter a prompt to generate code.</em>";
         return;
       }
-      output.innerHTML = "<em>Generating code...</em>";
+      // Disable the button
+      generateBtn.disabled = true;
+      generateBtn.style.opacity = 0.6;
+      // Show spinner animation
+      output.innerHTML = `<div class="editor-spinner" style="display:flex;align-items:center;justify-content:center;height:60px;"><svg class="spin" width="36" height="36" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#a200ff" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 150" stroke-dashoffset="0"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg><span style="margin-left:12px;font-size:1.1em;color:#a200ff;">Generating...</span></div>`;
       try {
         const response = await fetch("/codegen", {
           method: "POST",
@@ -563,6 +567,10 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       } catch (e) {
         output.innerHTML = "<em>Error generating code.</em>";
+      } finally {
+        // Re-enable the button
+        generateBtn.disabled = false;
+        generateBtn.style.opacity = 1;
       }
     };
     // Typing animation for code blocks (no truncation, handles long code)

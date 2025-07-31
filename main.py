@@ -1,6 +1,5 @@
 import random
 import re
-import os
 from huggingface_hub import InferenceClient
 
 class SelmaAI:
@@ -15,7 +14,7 @@ class SelmaAI:
             ])
         ]
         # Hugging Face client
-        hf_token = os.getenv("HF_TOKEN")
+        hf_token = "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"
         self.hf_client = InferenceClient(token=hf_token) if hf_token else None
 
     def ask_huggingface(self, prompt):
@@ -43,12 +42,12 @@ class SelmaAI:
         try:
             all_content = ""
             last_content = ""
-            max_loops = 3  # More conservative: max 3 loops
-            token_limit = 2048
+            max_loops = 5  # Avoid infinite loops
             for i in range(max_loops):
                 if i == 0:
                     messages = [{"role": "user", "content": prompt}]
                 else:
+                    # Ask to continue from last output
                     messages = [
                         {"role": "user", "content": prompt},
                         {"role": "assistant", "content": last_content},
@@ -57,14 +56,14 @@ class SelmaAI:
                 response = self.hf_client.chat.completions.create(
                     model="Qwen/Qwen3-235B-A22B-Thinking-2507",
                     messages=messages,
-                    max_tokens=token_limit
+                    max_tokens=4096
                 )
                 content = response.choices[0].message.content
                 print(f"[DEBUG] Quen2Coder response length (part {i+1}): {len(content) if content else 0}")
                 all_content += ("\n" if all_content else "") + (content or "")
                 last_content = content or ""
-                # Only continue if response is very close to the limit (e.g., > 90% of token_limit)
-                if not content or len(content) < int(token_limit * 0.9):
+                # Heuristic: if response is much shorter than max_tokens, assume it's done
+                if not content or len(content) < 3500:
                     break
             return all_content
         except Exception as e:
